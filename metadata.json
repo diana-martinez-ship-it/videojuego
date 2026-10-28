@@ -1,0 +1,6 @@
+{
+  "name": "Lucha Callejera: Torneo Mexicano",
+  "description": "Videojuego de peleas arcade estilo Street Fighter mexicano con escenarios del Mercado de Abastos, Bodega Aurrera con Mamá Lucha y Día de Muertos.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Press Start 2P', monospace, system-ui, sans-serif;
+    user-select: none;
+    -webkit-user-select: none;
+    overflow: hidden;
+    background-color: #050505;
+  }
+}
+
+/* Retro CRT Screen Filter */
+.crt-overlay {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.25) 50%
+  ), linear-gradient(
+    90deg,
+    rgba(255, 0, 0, 0.04),
+    rgba(0, 255, 0, 0.02),
+    rgba(0, 0, 255, 0.04)
+  );
+  background-size: 100% 3px, 4px 100%;
+  box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.8);
+}
+
+.crt-flicker {
+  animation: flicker 0.15s infinite;
+}
+
+@keyframes flicker {
+  0% { opacity: 0.98; }
+  50% { opacity: 1; }
+  100% { opacity: 0.99; }
+}
+
+/* Custom Arcade Text Shadows */
+.arcade-text-gold {
+  color: #ffde00;
+  text-shadow: 2px 2px 0px #b22222, 4px 4px 0px #000000;
+}
+
+.arcade-text-red {
+  color: #ff2a2a;
+  text-shadow: 2px 2px 0px #700, 3px 3px 0px #000;
+}
+
+.arcade-text-green {
+  color: #00e676;
+  text-shadow: 2px 2px 0px #004d40, 3px 3px 0px #000;
+}
+
+.arcade-text-blue {
+  color: #00e5ff;
+  text-shadow: 2px 2px 0px #006064, 3px 3px 0px #000;
+}
+
+.cempasuchil-glow {
+  text-shadow: 0 0 10px #ff9100, 0 0 20px #ff6d00;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #111;
+}
+::-webkit-scrollbar-thumb {
+  background: #e65100;
+  border-radius: 3px;
+}
