@@ -64,6 +64,57 @@
   text-shadow: 0 0 10px #ff9100, 0 0 20px #ff6d00;
 }
 
+/* Street Fighter II Style Cursor Animation */
+@keyframes cursor-bounce-x {
+  0%, 100% {
+    transform: translateX(0px) scale(1);
+  }
+  50% {
+    transform: translateX(6px) scale(1.08);
+  }
+}
+
+.animate-cursor-bounce {
+  animation: cursor-bounce-x 0.7s infinite ease-in-out;
+}
+
+/* Floating Cempasúchil Petal Drift */
+@keyframes petal-float {
+  0% {
+    transform: translateY(0px) rotate(0deg);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateY(-20px) rotate(180deg) translateX(10px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-40px) rotate(360deg) translateX(-5px);
+    opacity: 0.7;
+  }
+}
+
+.animate-petal {
+  animation: petal-float 6s infinite ease-in-out alternate;
+}
+
+/* Arcade 3D Push Button Bevels */
+.arcade-bevel-gold {
+  border-top: 3px solid #fef08a;
+  border-left: 3px solid #fde047;
+  border-right: 4px solid #854d0e;
+  border-bottom: 5px solid #451a03;
+  box-shadow: 0 0 20px rgba(234, 88, 12, 0.55), inset 0 2px 4px rgba(255, 255, 255, 0.4);
+}
+
+.arcade-bevel-dark {
+  border-top: 2px solid #525252;
+  border-left: 2px solid #404040;
+  border-right: 3px solid #171717;
+  border-bottom: 4px solid #0a0a0a;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.7), inset 0 1px 2px rgba(255, 255, 255, 0.1);
+}
+
 /* Custom scrollbars */
 ::-webkit-scrollbar {
   width: 6px;

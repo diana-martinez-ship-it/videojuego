@@ -805,10 +805,19 @@ export class GameRenderer {
     // Flash white/red when hit
     const isFlashing = f.hitFlashTimer > 0;
 
+    // Wakeup invulnerability flashing
+    if (f.state === 'wakeup' && Math.floor(this.animTimer * 20) % 2 === 0) {
+      ctx.globalAlpha = 0.45;
+    }
+
     // Flip horizontally based on facing direction
     ctx.translate(f.x + f.width / 2, f.y + f.height);
     if (f.facing === -1) {
       ctx.scale(-1, 1);
+    }
+
+    if (f.state === 'grabbed') {
+      ctx.rotate(-0.3);
     }
 
     const t = this.animTimer * 6;

@@ -20,12 +20,16 @@ export type ActionState =
   | 'crouch'
   | 'jump'
   | 'punch'
+  | 'heavy_punch'
   | 'kick'
   | 'special'
   | 'super'
   | 'block'
   | 'hit'
   | 'knockdown'
+  | 'throw'
+  | 'grabbed'
+  | 'wakeup'
   | 'victory'
   | 'defeat';
 
@@ -146,7 +150,7 @@ export interface FighterState {
   hitFlashTimer: number;
 }
 
-export type GameMode = 'arcade' | 'versus_cpu' | 'versus_p2' | 'training';
+export type GameMode = 'arcade' | 'versus_cpu' | 'versus_p2' | 'training' | 'beatemup';
 
 export type GamePhase =
   | 'title'
@@ -156,7 +160,10 @@ export type GamePhase =
   | 'intro'
   | 'fighting'
   | 'round_end'
-  | 'match_end';
+  | 'match_end'
+  | 'beatemup_playing'
+  | 'beatemup_victory'
+  | 'beatemup_gameover';
 
 export interface InputState {
   up: boolean;
@@ -167,4 +174,48 @@ export interface InputState {
   kick: boolean;
   special: boolean;
   super: boolean;
+  heavyPunch?: boolean;
+  throw?: boolean;
 }
+
+export interface FloatingCombatText {
+  id: number;
+  text: string;
+  x: number;
+  y: number;
+  vy: number;
+  alpha: number;
+  color: string;
+  fontSize: number;
+}
+
+export type EnemyType = 'cholo' | 'calavera' | 'maton' | 'boss';
+
+export interface BeatEmUpEnemy {
+  id: number;
+  type: EnemyType;
+  name: string;
+  x: number;
+  z: number;
+  y: number; // jump/fall elevation
+  vx: number;
+  vz: number;
+  vy: number;
+  facing: 1 | -1;
+  health: number;
+  maxHealth: number;
+  state: 'idle' | 'walk' | 'attack' | 'hit' | 'knockdown' | 'dead';
+  stateTimer: number;
+  attackCooldown: number;
+  hitFlashTimer: number;
+  color: string;
+}
+
+export interface BeatEmUpItem {
+  id: number;
+  type: 'tacos' | 'refresco' | 'barril';
+  x: number;
+  z: number;
+  collected: boolean;
+}
+

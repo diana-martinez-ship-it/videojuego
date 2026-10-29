@@ -31,6 +31,9 @@ import { StageSelect } from './components/StageSelect';
 import { MoveListModal } from './components/MoveListModal';
 import { VirtualControls } from './components/VirtualControls';
 import { VictoryModal } from './components/VictoryModal';
+import { BeatEmUpEngine } from './game/beatemup';
+import { BeatEmUpHUD } from './components/BeatEmUpHUD';
+import { PauseModal } from './components/PauseModal';
 
 export default function App() {
   // Navigation & Game State
@@ -74,9 +77,11 @@ export default function App() {
     p2: createFighter(2, CHARACTERS[1], 670, -1),
   });
 
+  const beatEmUpEngineRef = useRef<BeatEmUpEngine | null>(null);
+
   const inputsRef = useRef<{ p1: InputState; p2: InputState }>({
-    p1: { up: false, down: false, left: false, right: false, punch: false, kick: false, special: false, super: false },
-    p2: { up: false, down: false, left: false, right: false, punch: false, kick: false, special: false, super: false },
+    p1: { up: false, down: false, left: false, right: false, punch: false, kick: false, special: false, super: false, heavyPunch: false, throw: false },
+    p2: { up: false, down: false, left: false, right: false, punch: false, kick: false, special: false, super: false, heavyPunch: false, throw: false },
   });
 
   const superFreezeRef = useRef<{ active: boolean; char: CharacterDef | null; timer: number }>({
@@ -96,27 +101,32 @@ export default function App() {
         e.preventDefault();
       }
 
-      if (e.code === 'Escape') {
+      // Pause toggle (ESC or KeyP) during combat or beat em up
+      if ((e.code === 'Escape' || e.code === 'KeyP') && (phase === 'fighting' || phase === 'beatemup_playing')) {
         setIsPaused(prev => !prev);
+        soundManager.playSelect();
         return;
       }
+
       if (e.code === 'Tab') {
         e.preventDefault();
         setShowMoveList(prev => !prev);
         return;
       }
 
-      // Title screen quick start
-      if (phase === 'title' && (e.code === 'Space' || e.code === 'Enter')) {
-        soundManager.playCoin();
-        soundManager.startMariachiBGM();
-        setPhase('char_select');
+      // If game is paused, do not register fighting inputs
+      if (isPaused) {
+        return;
+      }
+
+      // Title screen keyboard navigation is handled directly inside TitleScreen
+      if (phase === 'title') {
         return;
       }
 
       const inp = inputsRef.current;
 
-      // P1 Keyboard Controls (WASD + J, K, L, U / Space)
+      // P1 Keyboard Controls (WASD + J, K, L, U, H, Space)
       switch (e.code) {
         case 'KeyW': inp.p1.up = true; break;
         case 'KeyS': inp.p1.down = true; break;
@@ -125,24 +135,35 @@ export default function App() {
         case 'KeyJ': inp.p1.punch = true; break;
         case 'KeyK': inp.p1.kick = true; break;
         case 'KeyL': inp.p1.special = true; break;
-        case 'KeyU':
+        case 'KeyU': inp.p1.heavyPunch = true; inp.p1.super = true; break;
+        case 'KeyH': inp.p1.throw = true; break;
         case 'Space': inp.p1.super = true; break;
+        // In Beat Em Up, allow arrow keys for P1 movement
+        case 'ArrowUp': if (phase === 'beatemup_playing') inp.p1.up = true; break;
+        case 'ArrowDown': if (phase === 'beatemup_playing') inp.p1.down = true; break;
+        case 'ArrowLeft': if (phase === 'beatemup_playing') inp.p1.left = true; break;
+        case 'ArrowRight': if (phase === 'beatemup_playing') inp.p1.right = true; break;
       }
 
-      // P2 Keyboard Controls (Arrow Keys + NumPad 4, 5, 6, 1 / I, O, P, 8)
-      switch (e.code) {
-        case 'ArrowUp': inp.p2.up = true; break;
-        case 'ArrowDown': inp.p2.down = true; break;
-        case 'ArrowLeft': inp.p2.left = true; break;
-        case 'ArrowRight': inp.p2.right = true; break;
-        case 'Numpad4':
-        case 'KeyI': inp.p2.punch = true; break;
-        case 'Numpad5':
-        case 'KeyO': inp.p2.kick = true; break;
-        case 'Numpad6':
-        case 'KeyP': inp.p2.special = true; break;
-        case 'Numpad1':
-        case 'Digit8': inp.p2.super = true; break;
+      // P2 Keyboard Controls (Arrow Keys + NumPad 4, 5, 6, 1, 7, 0 / I, O, P, 8)
+      if (phase !== 'beatemup_playing') {
+        switch (e.code) {
+          case 'ArrowUp': inp.p2.up = true; break;
+          case 'ArrowDown': inp.p2.down = true; break;
+          case 'ArrowLeft': inp.p2.left = true; break;
+          case 'ArrowRight': inp.p2.right = true; break;
+          case 'Numpad4':
+          case 'KeyI': inp.p2.punch = true; break;
+          case 'Numpad5':
+          case 'KeyO': inp.p2.kick = true; break;
+          case 'Numpad6':
+          case 'KeyP': inp.p2.special = true; break;
+          case 'Numpad7':
+          case 'KeyY': inp.p2.heavyPunch = true; break;
+          case 'Numpad0': inp.p2.throw = true; break;
+          case 'Numpad1':
+          case 'Digit8': inp.p2.super = true; break;
+        }
       }
     };
 
@@ -158,24 +179,34 @@ export default function App() {
         case 'KeyJ': inp.p1.punch = false; break;
         case 'KeyK': inp.p1.kick = false; break;
         case 'KeyL': inp.p1.special = false; break;
-        case 'KeyU':
+        case 'KeyU': inp.p1.heavyPunch = false; inp.p1.super = false; break;
+        case 'KeyH': inp.p1.throw = false; break;
         case 'Space': inp.p1.super = false; break;
+        case 'ArrowUp': if (phase === 'beatemup_playing') inp.p1.up = false; break;
+        case 'ArrowDown': if (phase === 'beatemup_playing') inp.p1.down = false; break;
+        case 'ArrowLeft': if (phase === 'beatemup_playing') inp.p1.left = false; break;
+        case 'ArrowRight': if (phase === 'beatemup_playing') inp.p1.right = false; break;
       }
 
       // P2 Controls
-      switch (e.code) {
-        case 'ArrowUp': inp.p2.up = false; break;
-        case 'ArrowDown': inp.p2.down = false; break;
-        case 'ArrowLeft': inp.p2.left = false; break;
-        case 'ArrowRight': inp.p2.right = false; break;
-        case 'Numpad4':
-        case 'KeyI': inp.p2.punch = false; break;
-        case 'Numpad5':
-        case 'KeyO': inp.p2.kick = false; break;
-        case 'Numpad6':
-        case 'KeyP': inp.p2.special = false; break;
-        case 'Numpad1':
-        case 'Digit8': inp.p2.super = false; break;
+      if (phase !== 'beatemup_playing') {
+        switch (e.code) {
+          case 'ArrowUp': inp.p2.up = false; break;
+          case 'ArrowDown': inp.p2.down = false; break;
+          case 'ArrowLeft': inp.p2.left = false; break;
+          case 'ArrowRight': inp.p2.right = false; break;
+          case 'Numpad4':
+          case 'KeyI': inp.p2.punch = false; break;
+          case 'Numpad5':
+          case 'KeyO': inp.p2.kick = false; break;
+          case 'Numpad6':
+          case 'KeyP': inp.p2.special = false; break;
+          case 'Numpad7':
+          case 'KeyY': inp.p2.heavyPunch = false; break;
+          case 'Numpad0': inp.p2.throw = false; break;
+          case 'Numpad1':
+          case 'Digit8': inp.p2.super = false; break;
+        }
       }
     };
 
@@ -316,11 +347,17 @@ export default function App() {
     setP2Char(c2);
     setDifficulty(diff);
 
+    if (gameMode === 'beatemup') {
+      beatEmUpEngineRef.current = new BeatEmUpEngine(c1);
+      setPhase('beatemup_playing');
+      soundManager.startMariachiBGM();
+      return;
+    }
+
     if (gameMode === 'arcade') {
-      // In arcade mode, Stage 1 is Bodega Aurrera, opponent is Catrina or Catrín
-      const opponent = c1.id === 'catrina' ? CHARACTERS[2] : CHARACTERS[1];
-      setP2Char(opponent);
-      startMatch(STAGES[0], c1, opponent);
+      // In arcade mode, use chosen rival (manual or random!)
+      setP2Char(c2);
+      startMatch(STAGES[0], c1, c2);
     } else {
       setPhase('stage_select');
     }
@@ -346,9 +383,39 @@ export default function App() {
     startMatch(currentStage, p1Char, p2Char);
   };
 
+  // Pause Actions
+  const handleResume = useCallback(() => {
+    setIsPaused(false);
+    soundManager.playSelect();
+  }, []);
+
+  const handleRestartCombat = useCallback(() => {
+    setIsPaused(false);
+    if (phase === 'beatemup_playing') {
+      beatEmUpEngineRef.current = new BeatEmUpEngine(p1Char);
+    } else {
+      startMatch(currentStage, p1Char, p2Char);
+    }
+  }, [phase, p1Char, p2Char, currentStage, startMatch]);
+
+  const handleChangeCharacter = useCallback(() => {
+    setIsPaused(false);
+    setPhase('char_select');
+  }, []);
+
+  const handleMainMenu = useCallback(() => {
+    setIsPaused(false);
+    setPhase('title');
+    soundManager.stopMariachiBGM();
+    beatEmUpEngineRef.current = null;
+    physicsRef.current.resetArena();
+    inputsRef.current.p1 = { up: false, down: false, left: false, right: false, punch: false, kick: false, special: false, super: false, heavyPunch: false, throw: false };
+    inputsRef.current.p2 = { up: false, down: false, left: false, right: false, punch: false, kick: false, special: false, super: false, heavyPunch: false, throw: false };
+  }, []);
+
   // Main 60fps Game Loop
   useEffect(() => {
-    if (phase !== 'fighting' && phase !== 'intro' && phase !== 'round_end') {
+    if (phase !== 'fighting' && phase !== 'intro' && phase !== 'round_end' && phase !== 'beatemup_playing') {
       return;
     }
 
@@ -364,6 +431,16 @@ export default function App() {
     let animationFrameId: number;
 
     const gameLoop = () => {
+      // Beat Em Up loop
+      if (phase === 'beatemup_playing' && beatEmUpEngineRef.current) {
+        if (!isPaused) {
+          beatEmUpEngineRef.current.update(inputsRef.current.p1);
+        }
+        beatEmUpEngineRef.current.render(ctx);
+        animationFrameId = requestAnimationFrame(gameLoop);
+        return;
+      }
+
       const { p1, p2 } = fightersRef.current;
       const physics = physicsRef.current;
       const renderer = rendererRef.current!;
@@ -560,6 +637,19 @@ export default function App() {
           />
         )}
 
+        {/* Phase: BEAT 'EM UP HUD */}
+        {phase === 'beatemup_playing' && beatEmUpEngineRef.current && (
+          <BeatEmUpHUD
+            engine={beatEmUpEngineRef.current}
+            onRetry={() => {
+              beatEmUpEngineRef.current = new BeatEmUpEngine(p1Char);
+            }}
+            onExit={() => setPhase('title')}
+            onToggleMute={handleToggleMute}
+            isMuted={isMuted}
+          />
+        )}
+
         {/* Mobile / Touchscreen Virtual Arcade Controls */}
         {(phase === 'fighting' || phase === 'intro') && (
           <VirtualControls
@@ -579,9 +669,19 @@ export default function App() {
             totalArcadeStages={STAGES.length}
             onNextStage={handleNextArcadeStage}
             onRematch={handleRematch}
-            onBackToMenu={() => setPhase('title')}
+            onChangeFighter={handleChangeCharacter}
+            onBackToMenu={handleMainMenu}
           />
         )}
+
+        {/* Pause Modal (ESC or P during 1v1 fight or Beat Em Up) */}
+        <PauseModal
+          isOpen={isPaused}
+          onResume={handleResume}
+          onRestart={handleRestartCombat}
+          onChangeCharacter={handleChangeCharacter}
+          onMainMenu={handleMainMenu}
+        />
 
         {/* Move List & Controls Modal */}
         <MoveListModal

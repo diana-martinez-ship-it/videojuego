@@ -159,12 +159,48 @@ export class PhysicsEngine {
     }
 
     // Cannot act during hitstun, knockdown, victory or defeat
-    if (f.state === 'hit' || f.state === 'knockdown' || f.state === 'victory' || f.state === 'defeat') {
+    // Cannot act during hitstun, knockdown, wakeup, throw, grabbed, victory or defeat
+    if (
+      f.state === 'hit' ||
+      f.state === 'knockdown' ||
+      f.state === 'wakeup' ||
+      f.state === 'throw' ||
+      f.state === 'grabbed' ||
+      f.state === 'victory' ||
+      f.state === 'defeat'
+    ) {
       if (f.state === 'hit' && f.stateTimer > 14) {
         f.state = 'idle';
         f.stateTimer = 0;
       } else if (f.state === 'knockdown') {
-        if (f.isGrounded && f.stateTimer > 40) {
+        if (f.isGrounded && f.stateTimer > 35) {
+          f.state = 'wakeup';
+          f.stateTimer = 0;
+        }
+      } else if (f.state === 'wakeup') {
+        if (f.stateTimer > 12) {
+          f.state = 'idle';
+          f.stateTimer = 0;
+        }
+      } else if (f.state === 'throw') {
+        if (f.stateTimer === 8) {
+          opponent.state = 'knockdown';
+          opponent.stateTimer = 0;
+          opponent.health = Math.max(0, opponent.health - 22);
+          opponent.vx = f.facing * 8;
+          opponent.vy = -6;
+          f.superMeter = Math.min(100, f.superMeter + 15);
+          this.screenShake = 1.3;
+          soundManager.playKO();
+          this.particles.push(...spawnHitSparks(opponent.x + opponent.width / 2, opponent.y + 40, false));
+        }
+        if (f.stateTimer > 24) {
+          f.state = 'idle';
+          f.stateTimer = 0;
+        }
+      } else if (f.state === 'grabbed') {
+        f.vx = 0;
+        if (f.stateTimer > 24) {
           f.state = 'idle';
           f.stateTimer = 0;
         }
@@ -177,6 +213,7 @@ export class PhysicsEngine {
     const movingAway = (f.facing === 1 && inp.left) || (f.facing === -1 && inp.right);
     const opponentAttacking =
       opponent.state === 'punch' ||
+      opponent.state === 'heavy_punch' ||
       opponent.state === 'kick' ||
       opponent.state === 'special' ||
       opponent.state === 'super' ||
@@ -191,6 +228,21 @@ export class PhysicsEngine {
     const canAttack = f.state === 'idle' || f.state === 'walk_forward' || f.state === 'walk_backward' || f.state === 'crouch';
 
     if (canAttack) {
+      // Close Grapple / Throw (Frente + Golpe a corta distancia)
+      const movingForward = (f.facing === 1 && inp.right) || (f.facing === -1 && inp.left);
+      const isClose = Math.abs(f.x - opponent.x) < 55 && f.isGrounded && opponent.isGrounded && opponent.state !== 'knockdown' && opponent.state !== 'wakeup';
+
+      if ((inp.throw || (movingForward && inp.punch)) && isClose) {
+        f.state = 'throw';
+        f.stateTimer = 0;
+        f.vx = 0;
+        opponent.state = 'grabbed';
+        opponent.stateTimer = 0;
+        opponent.vx = 0;
+        soundManager.playWhoosh();
+        return;
+      }
+
       if (inp.super && f.superMeter >= 100) {
         // SUPER MOVE ACTIVATION!
         f.superMeter = 0;
@@ -212,6 +264,15 @@ export class PhysicsEngine {
         f.vx = 0;
         soundManager.playSpecial();
         this.spawnSpecialAttack(f);
+        return;
+      }
+
+      // Heavy Punch
+      if (inp.heavyPunch) {
+        f.state = 'heavy_punch';
+        f.stateTimer = 0;
+        f.vx = 0;
+        soundManager.playWhoosh();
         return;
       }
 
@@ -280,6 +341,28 @@ export class PhysicsEngine {
       }
 
       if (f.stateTimer > 14) {
+        f.state = 'idle';
+        f.stateTimer = 0;
+        f.currentHitbox = null;
+      }
+    } else if (f.state === 'heavy_punch') {
+      // Hitbox active on frames 5 - 10
+      if (f.stateTimer >= 5 && f.stateTimer <= 10) {
+        f.currentHitbox = {
+          x: f.facing === 1 ? f.x + f.width : f.x - 55,
+          y: f.y + 20,
+          width: 55,
+          height: 40,
+          damage: f.charDef.moves.light.damage + 7,
+          knockbackX: f.facing * 7,
+          knockbackY: -4,
+          isHeavy: true,
+        };
+      } else {
+        f.currentHitbox = null;
+      }
+
+      if (f.stateTimer > 20) {
         f.state = 'idle';
         f.stateTimer = 0;
         f.currentHitbox = null;
@@ -574,7 +657,14 @@ export class PhysicsEngine {
     const hitX = hb.x < defender.x + defender.width && hb.x + hb.width > defender.x;
     const hitY = hb.y < defender.y + defender.height && hb.y + hb.height > defender.y;
 
-    if (hitX && hitY && defender.state !== 'knockdown' && defender.state !== 'defeat') {
+    if (
+      hitX &&
+      hitY &&
+      defender.state !== 'knockdown' &&
+      defender.state !== 'defeat' &&
+      defender.state !== 'wakeup' &&
+      defender.state !== 'grabbed'
+    ) {
       // Hit connected!
       attacker.currentHitbox = null; // consume hitbox so it only hits once
 

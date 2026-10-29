@@ -45,13 +45,15 @@ export const MoveListModal: React.FC<MoveListModalProps> = ({
                 <span>JUGADOR 1 (TECLADO)</span>
               </h4>
               <div className="space-y-1.5 text-[10px]">
-                <div className="flex justify-between"><span className="text-neutral-400">Moverse / Agacharse:</span><span className="text-amber-300 font-bold">W, A, S, D</span></div>
-                <div className="flex justify-between"><span className="text-neutral-400">Saltar:</span><span className="text-amber-300 font-bold">W / Flecha Arriba</span></div>
-                <div className="flex justify-between"><span className="text-neutral-400">Cubrirse / Bloqueo:</span><span className="text-amber-300 font-bold">Mantener Atrás (A)</span></div>
-                <div className="flex justify-between"><span className="text-neutral-400">Golpe Rápido:</span><span className="text-emerald-400 font-bold">J</span></div>
-                <div className="flex justify-between"><span className="text-neutral-400">Patada Pesada:</span><span className="text-blue-400 font-bold">K</span></div>
+                <div className="flex justify-between"><span className="text-neutral-400">Moverse / 8D:</span><span className="text-amber-300 font-bold">W, A, S, D / Flechas</span></div>
+                <div className="flex justify-between"><span className="text-neutral-400">Saltar:</span><span className="text-amber-300 font-bold">W / Espacio</span></div>
+                <div className="flex justify-between"><span className="text-neutral-400">Bloqueo (1v1):</span><span className="text-amber-300 font-bold">Mantener Atrás (A)</span></div>
+                <div className="flex justify-between"><span className="text-neutral-400">Golpe Débil (Jab):</span><span className="text-emerald-400 font-bold">J</span></div>
+                <div className="flex justify-between"><span className="text-neutral-400">Golpe Fuerte:</span><span className="text-emerald-300 font-bold">U</span></div>
+                <div className="flex justify-between"><span className="text-neutral-400">Patada:</span><span className="text-blue-400 font-bold">K</span></div>
+                <div className="flex justify-between"><span className="text-neutral-400">Agarre Cercano (Throw):</span><span className="text-orange-400 font-bold">Frente + J ó H</span></div>
                 <div className="flex justify-between"><span className="text-neutral-400">Ataque Especial:</span><span className="text-purple-400 font-bold">L</span></div>
-                <div className="flex justify-between"><span className="text-neutral-400">¡SUPER FURIA! (100%):</span><span className="text-yellow-400 font-bold">U</span></div>
+                <div className="flex justify-between"><span className="text-neutral-400">¡SUPER FURIA! (100%):</span><span className="text-yellow-400 font-bold">Espacio / U</span></div>
               </div>
             </div>
 
@@ -64,9 +66,11 @@ export const MoveListModal: React.FC<MoveListModalProps> = ({
               <div className="space-y-1.5 text-[10px]">
                 <div className="flex justify-between"><span className="text-neutral-400">Moverse / Agacharse:</span><span className="text-amber-300 font-bold">Flechas de dirección</span></div>
                 <div className="flex justify-between"><span className="text-neutral-400">Saltar:</span><span className="text-amber-300 font-bold">Flecha Arriba</span></div>
-                <div className="flex justify-between"><span className="text-neutral-400">Cubrirse / Bloqueo:</span><span className="text-amber-300 font-bold">Mantener Atrás</span></div>
-                <div className="flex justify-between"><span className="text-neutral-400">Golpe Rápido:</span><span className="text-emerald-400 font-bold">NumPad 4 / I</span></div>
-                <div className="flex justify-between"><span className="text-neutral-400">Patada Pesada:</span><span className="text-blue-400 font-bold">NumPad 5 / O</span></div>
+                <div className="flex justify-between"><span className="text-neutral-400">Bloqueo (1v1):</span><span className="text-amber-300 font-bold">Mantener Atrás</span></div>
+                <div className="flex justify-between"><span className="text-neutral-400">Golpe Débil:</span><span className="text-emerald-400 font-bold">NumPad 4 / I</span></div>
+                <div className="flex justify-between"><span className="text-neutral-400">Golpe Fuerte:</span><span className="text-emerald-300 font-bold">NumPad 7 / Y</span></div>
+                <div className="flex justify-between"><span className="text-neutral-400">Patada:</span><span className="text-blue-400 font-bold">NumPad 5 / O</span></div>
+                <div className="flex justify-between"><span className="text-neutral-400">Agarre Cercano:</span><span className="text-orange-400 font-bold">Frente + Num4</span></div>
                 <div className="flex justify-between"><span className="text-neutral-400">Ataque Especial:</span><span className="text-purple-400 font-bold">NumPad 6 / P</span></div>
                 <div className="flex justify-between"><span className="text-neutral-400">¡SUPER FURIA! (100%):</span><span className="text-yellow-400 font-bold">NumPad 1 / 8</span></div>
               </div>
